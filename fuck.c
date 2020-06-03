@@ -1,11 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
+
+#define NUM_CELLS 30000
 
 char *read_file(char *file_path, int *file_size);
 int valid_char(char c);
 int valid_brackets(const char *contents, int size);
-int valid_syntax(char *content, int size);
+int valid_syntax(const char *content, int size);
+void interpret(const char *contents, int size);
 
 int main(int argv, char *args[]) {
 
@@ -22,9 +26,9 @@ int main(int argv, char *args[]) {
 
 //    free(file_contents);
 
-    char* s = "[[[][][][][]]]";
+    char *s = "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++.";
 
-    printf("%d\n", valid_brackets(s, (int)strlen(s)));
+    interpret(s, strlen(s));
 
     return 0;
 }
@@ -80,6 +84,55 @@ int valid_brackets(const char *contents, int size) {
     }
 
     return top == 0;
+}
+
+int valid_syntax(const char *contents, int size) {
+
+    for (int i = 0; i < size; ++i) {
+        if (!valid_char(contents[i]))
+            return 0;
+    }
+
+    return valid_brackets(contents, size);
+}
+
+void interpret(const char *contents, int size) {
+
+    unsigned char memory[NUM_CELLS];
+
+    unsigned char *ptr = memory;
+
+    for (int i = 0; i < size; ++i) {
+
+        switch (contents[i]) {
+            case '+':
+                ++*ptr;
+                break;
+
+            case '-':
+                --*ptr;
+                break;
+
+            case '>':
+                ++ptr;
+                break;
+
+            case '<':
+                --ptr;
+                break;
+
+            case '.':
+                putchar(*ptr);
+                break;
+
+            case ',':
+                *ptr = getchar();
+                break;
+
+            // TODO:
+            // add loop handling
+        }
+    }
 }
 
 
