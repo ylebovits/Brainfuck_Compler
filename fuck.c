@@ -10,25 +10,25 @@ int valid_char(char c);
 int valid_brackets(const char *contents, int size);
 int valid_syntax(const char *content, int size);
 void interpret(const char *contents, int size);
+int next_loop_close(const char *contents, int curr_pos, int size);
 
 int main(int argv, char *args[]) {
 
-//    if (argv < 2) {
-//        printf("Usage: ./fuck source_file\n");
-//        return 1;
-//    }
+    if (argv < 2) {
+        printf("Usage: ./fuck source_file\n");
+        return 1;
+    }
 
-//    char *source_path = args[1];
-//    int file_size;
-//    char *file_contents = read_file(source_path, &file_size);
+    char *source_path = args[1];
+    int file_size;
+    char *file_contents = read_file(source_path, &file_size);
 
-//    printf("%s\n%d\n", file_contents, file_size);
+    if ( valid_syntax(file_contents, file_size) )
+        interpret(file_contents, file_size);
+    else
+        printf("Syntax error!\n");
 
-//    free(file_contents);
-
-    char *s = "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++.";
-
-    interpret(s, strlen(s));
+    free(file_contents);
 
     return 0;
 }
@@ -69,7 +69,7 @@ int valid_char(char c) {
 
 int valid_brackets(const char *contents, int size) {
     
-    char stack[size];
+    char stack[size]; // not super memory efficient
     int top = 0;
 
     for (int i = 0; i < size; ++i) {
@@ -88,19 +88,32 @@ int valid_brackets(const char *contents, int size) {
 
 int valid_syntax(const char *contents, int size) {
 
-    for (int i = 0; i < size; ++i) {
+    for (int i = 0; i < size; ++i)
         if (!valid_char(contents[i]))
             return 0;
-    }
 
     return valid_brackets(contents, size);
 }
+
+/*
+ * precondition: there exists a ] between contents[curr_pos] and contents[size-1]
+ */
+int next_loop_close(const char *contents, int curr_pos, int size) {
+
+    for (int i = curr_pos; i < size; ++i)
+        if ( contents[i] == ']' )
+            return i;
+    return -1; // won't ever return -1 if used properly
+}
+
 
 void interpret(const char *contents, int size) {
 
     unsigned char memory[NUM_CELLS];
 
     unsigned char *ptr = memory;
+
+    int loop_start_index;
 
     for (int i = 0; i < size; ++i) {
 
@@ -129,8 +142,16 @@ void interpret(const char *contents, int size) {
                 *ptr = getchar();
                 break;
 
-            // TODO:
-            // add loop handling
+            case '[':
+                if ( *ptr )
+                    loop_start_index = i;
+                else
+                    i = next_loop_close(contents, i, size) + 1;
+                break;
+
+            case ']':
+                i = loop_start_index;
+                break;
         }
     }
 }
